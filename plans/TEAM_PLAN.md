@@ -6,7 +6,7 @@ Prepared 23 September 2026. Deadline from the supplied project brief: 14 Novembe
 
 Three people on separate computers repair a virtual circuit together. The Inspector sees the diagram and target, the Analyst sees measurements, and the Operator changes settings. A Java server owns the game and sends different information to each player. Players speak to each other in person; voice chat is unnecessary.
 
-Build one server, one room, exactly three roles, three short puzzles, a shared timer, and basic disconnect/rejoin recovery while the server stays running. Use Java TCP sockets and a terminal interface as the working choice because the first-session examples already use Java sockets. Ask the lecturer to confirm permitted libraries/language and assessment expectations before locking this choice. Do not assume GUI, UDP, hardware, or a database is compulsory.
+Build one server, one room, exactly three roles, three short puzzles, a shared timer, and basic disconnect/rejoin recovery while the server stays running. Use Java TCP sockets and a terminal interface. The lecturer has since specified Java as the primary required language; confirm any library or assessment details that remain unclear. Do not assume GUI, UDP, hardware, or a database is compulsory.
 
 Defer GUI, accounts, multiple rooms, online deployment, hardware, and realistic waveform simulation. The game is a software simulation, not an embedded implementation. Finish a complete first puzzle before adding the other two.
 
@@ -23,7 +23,7 @@ Source directory: `/home/st4rk/Areas/Academics/exercises/JAVA`.
 
 The chat server has an accept loop, but the conversation happens inside it before the next accept. That is sequential service, not concurrent client handling. The chat client is turn-taking, so it cannot reliably show unsolicited updates while waiting at the keyboard. These are the two main changes to understand first.
 
-Inspection only: no course files were changed. Compilation was attempted, but `javac` was not available on this task's PATH. Confirm a working JDK on all three machines at the first checkpoint.
+Inspection only: no course files were changed. A JDK 21 compiler was later found at `/usr/lib/jvm/java-21-openjdk/bin/javac` on the coordinator's machine; it compiled the Member 3 puzzle test. Confirm a working JDK on all three machines.
 
 ## 3. Ownership and LO evidence
 
@@ -88,16 +88,15 @@ Planning assumption: each member can reserve about 5-7 focused hours per week, i
 
 | Dates | Member 1 | Member 2 | Member 3 | Required evidence |
 |---|---|---|---|---|
-| 23-25 Sep | Concurrent three-client echo server | Client receiving without keyboard input | Divider logic plus two-thread state exercise | Each runs and explains their small program |
-| 26 Sep-2 Oct | Join/roles and agreed protocol | Three role views and command encoding | First puzzle and role snapshots | Three clients finish puzzle 1 over localhost |
-| 3-9 Oct | LAN configuration, error isolation | Host/port arguments and helpful errors | Filter/logic puzzles and transition tests | Complete three-puzzle game on separate laptops |
-| 10-16 Oct | Rejoin sessions and heartbeat handling | Rejoin flow and receiver shutdown | Pause/resume, timer and concurrent-action tests | Disconnect one player and recover without resetting |
-| 17-23 Oct | Server failure-case checks | Client invalid-input and clean-exit checks | Scripted network acceptance tests | All acceptance checks below pass; feature freeze |
-| 24 Oct-6 Nov | Network explanation and setup review | User instructions and client explanation | Circuit calculations and test evidence | Clean-machine rehearsal and two mock vivas |
+| Through 2 Oct | Demonstrate and explain three-client echo server | Build and explain one-message Java client | Demonstrate and explain committed divider calculator | Fundamentals checkpoint: each member runs and explains their own work |
+| 3-9 Oct | Join/roles, agreed protocol, integration | Receive messages while typing; role views | Shared first-puzzle state and role snapshots | Three clients finish puzzle 1 over localhost |
+| 10-16 Oct | LAN configuration and failure isolation | Host/port arguments and helpful errors | Add filter and logic puzzles | Complete three-puzzle game on separate laptops |
+| 17-23 Oct | Rejoin sessions and heartbeat handling | Rejoin flow and receiver shutdown | Pause/resume, timer and concurrent-action tests | Disconnect one player and recover without resetting; feature freeze after proof |
+| 24 Oct-6 Nov | Server failure-case checks and setup review | Client invalid-input checks and user instructions | Scripted acceptance tests and circuit evidence | Clean-machine rehearsal and two mock vivas |
 | 7-13 Nov | All: fixes, backups, rehearsal, final submission preparation | All | All | Reproducible final build; no new features |
 | 14 Nov | Submit according to the lecturer's confirmed requirements | | | Submission completed |
 
-Protocol agreement is the prerequisite for integrating client and server. Meanwhile, client development can use a small stub server, and the game engine can use offline commands. Working first-puzzle networking is the prerequisite for expanding scope. Member 1 coordinates the weekly integration; each author fixes their own failures. If the 2 October checkpoint slips, cut display polish and optional variation immediately.
+Protocol agreement is the prerequisite for integrating client and server. Meanwhile, client development can use the current echo server, and the game engine can use offline commands. Working first-puzzle networking is the prerequisite for expanding scope. Member 1 coordinates the weekly integration; each author fixes their own failures. If the 9 October checkpoint slips, cut display polish and optional variation immediately, then revise later milestones with the team. The active short tasks are in `plans/assignments/CURRENT_CHECKPOINT_2_OCT.md`.
 
 ## 8. What counts as done
 

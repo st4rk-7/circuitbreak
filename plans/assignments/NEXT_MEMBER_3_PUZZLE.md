@@ -1,6 +1,6 @@
 # Next task: Member 3 - first puzzle and safe shared state
 
-**Target demo:** 2 October 2026. Read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding. Your `VoltageDividerPuzzle.java` and `PuzzleTest.java` are already on `main`: demonstrate them first. The two-thread shared-state exercise is still to be demonstrated, so make it part of this task.
+**Target demo:** 9 October 2026. First complete and explain [the current fundamentals checkpoint](CURRENT_CHECKPOINT_2_OCT.md). Then read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding. Your `VoltageDividerPuzzle.java` and `PuzzleTest.java` are already on `main`; the two-thread shared-state exercise is still to be demonstrated, so make it part of this task.
 
 **Deliverable:** Keep your existing calculator and add a Java `GameRoom` state class around it. Start with 500-ohm bottom resistance. Validate Operator changes against the existing `{500, 1000, 2000}` choices, calculate integer millivolts, record completion only once, and return or make available the three different role views described in the shared contract. The current `checkChoice()` returns a result but stores no puzzle progress; the new class must own that progress. It must not open sockets or read the keyboard.
 

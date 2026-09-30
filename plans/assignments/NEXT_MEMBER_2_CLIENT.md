@@ -1,6 +1,6 @@
 # Next task: Member 2 - player client and role views
 
-**Target demo:** 2 October 2026. Read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding. First show that the 25 September client can receive a message without the user pressing Enter; if it cannot, finish that task first.
+**Target demo:** 9 October 2026. First complete and explain [the current fundamentals checkpoint](CURRENT_CHECKPOINT_2_OCT.md). Then read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding. Your first step on this card is receiving a server message without pressing Enter.
 
 **Deliverable:** Make one Java terminal client that accepts server host, port, and a requested role. It sends `JOIN|ROLE`, shows the assigned role and the VIEW lines it receives, and lets the Operator select a bottom resistor. The Inspector and Analyst may attempt a SET so the team can demonstrate the server's rejection. Display `ERROR|...` and `SOLVED|1` clearly.
 

@@ -1,6 +1,6 @@
 # Next task: Member 1 - server and roles
 
-**Target demo:** 2 October 2026. Read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding. First show that the 25 September three-client echo task works; if it does not, repair that first.
+**Target demo:** 9 October 2026. First complete and explain [the current fundamentals checkpoint](CURRENT_CHECKPOINT_2_OCT.md). Then read [NEXT_SHARED_CONTRACT.md](NEXT_SHARED_CONTRACT.md) together before coding.
 
 **Deliverable:** Extend the committed `circuitbreakserver.java` so three clients can claim unique Inspector, Analyst, and Operator roles and stay connected. The server checks the role on every command. It routes a valid `SET|RBOTTOM_OHMS|1000` to Member 3's puzzle logic and sends a fresh role-specific view to each player. A fourth client or duplicate active role must receive a clear error. Do not read replies from the server keyboard.
 

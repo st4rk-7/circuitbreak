@@ -1,10 +1,10 @@
 # CircuitBreak: shared agreement for the next checkpoint
 
-**Team meeting:** 29 September 2026. **Working demonstration target:** 2 October 2026. These dates are targets from our project plan, not lecturer requirements.
+**Team meeting:** after the 2 October fundamentals checkpoint. **Working demonstration target:** 9 October 2026. These dates are revised targets from our project plan, not lecturer requirements.
 
-Before coding, each member demonstrates the first task assigned on 25 September. If a first task is incomplete, finish and explain it before taking on this card. Agree on **Java or C++ as one team** before editing project code. The committed server and workshop examples are Java, so these cards assume Java until the team explicitly changes the language together.
+Before coding, each member demonstrates and explains their task in [CURRENT_CHECKPOINT_2_OCT.md](CURRENT_CHECKPOINT_2_OCT.md). If a task is incomplete, finish it before taking on this contract. **Use Java:** the lecturer has specified it as the primary required language for this project.
 
-## What must work on 2 October
+## What must work on 9 October
 
 Three clients remain connected at once. Each claims a different role. The Inspector sees the voltage-divider diagram values and target; the Analyst sees the current output voltage; the Operator sees allowed resistor settings and can change one. The server validates the change and sends updated role views. Selecting 1000 ohms for the bottom resistor solves the first puzzle. An Inspector trying to change a resistor receives an error. There is no timer or reconnect requirement for this checkpoint.
 
@@ -27,7 +27,7 @@ All messages are UTF-8 text, one complete line per message, terminated with a ne
 
 After a valid SET, send a fresh VIEW to each connected role. A solved puzzle should report SOLVED exactly once. The example uses an ideal unloaded divider with `Vin = 10 V`, `Rtop = 1000 ohms`, and `Rbottom` in `{500, 1000, 2000}`. Compute `Vout = Vin * Rbottom / (Rtop + Rbottom)`, then round to integer millivolts for display. `Rbottom = 1000` produces exactly 5000 mV and solves the puzzle.
 
-Keep this first contract small. It does not yet specify the final protocol. On 29 September, all three members should read each example aloud and agree on exact capitalization and field names. If the contract changes, update this file first and tell the whole team. Do not independently alter message syntax.
+Keep this first contract small. It does not yet specify the final protocol. At the integration kickoff, all three members should read each example aloud and agree on exact capitalization and field names. If the contract changes, update this file first and tell the whole team. Do not independently alter message syntax.
 
 ## References and handoff
 
