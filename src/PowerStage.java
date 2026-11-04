@@ -1,51 +1,106 @@
+import java.util.Locale;
 import java.util.Random;
 
 /**
- * MEMBER 3 — Stage 1: the door has no power. One part is broken at random.
- * No networking here. Run `java StageTest` to check your work.
+ * Stage 1: The Analyst measures components, the Inspector reads the manual,
+ * and the Operator repairs the randomly selected fault.
+ *
+ * No sockets or console output belong in this class.
  */
 public class PowerStage implements Stage {
-    enum Fault { FUSE, BATTERY, DIODE }
+
+    public enum Fault { FUSE, BATTERY, DIODE }
 
     private final Fault fault;
-    private boolean solved = false;
+    private boolean solved;
 
+    /** Real game: randomly choose one broken component. */
     public PowerStage() {
-        this(Fault.values()[new Random().nextInt(3)]);
+        this(Fault.values()[new Random().nextInt(Fault.values().length)]);
     }
 
-    public PowerStage(Fault fault) { // tests use this to choose the fault
+    /** Test constructor: select a specific fault for repeatable tests. */
+    public PowerStage(Fault fault) {
+        if (fault == null) {
+            throw new IllegalArgumentException("Fault cannot be null");
+        }
         this.fault = fault;
+        this.solved = false;
     }
 
-    public String name() { return "POWER"; }
+    @Override
+    public String name() {
+        return "POWER";
+    }
 
-    public boolean isSolved() { return solved; }
+    @Override
+    public synchronized boolean isSolved() {
+        return solved;
+    }
 
-    public String handle(Role who, String cmd) {
-        // Example (done for you): the Inspector reads the manual.
-        if (cmd.equals("manual")) {
-            if (who != Role.INSPECTOR) return "ERROR: only the Inspector has the manual";
-            return "MANUAL: Fuse must show continuity. Battery must read +9 V. Diode must conduct at 0.7 V.";
+    @Override
+    public synchronized String handle(Role who, String cmd) {
+        if (who == null || cmd == null || cmd.trim().isEmpty()) {
+            return "ERROR: invalid role or command";
         }
 
-        // Example (done for you): the Analyst measures the fuse.
-        if (cmd.equals("measure fuse")) {
-            if (who != Role.ANALYST) return "ERROR: only the Analyst can measure";
-            return fault == Fault.FUSE ? "FUSE: OPEN (no continuity)" : "FUSE: OK (continuity)";
+        String command = cmd.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+
+        if (command.equals("manual")) {
+            if (who != Role.INSPECTOR) {
+                return "ERROR: only the Inspector can read the manual";
+            }
+            return "MANUAL: Fuse must show continuity. Battery must read +9 V. "
+                    + "Diode must conduct at 0.7 V.";
         }
 
-        // TODO (Member 3): "measure battery"  -> "BATTERY: +9.0 V", or "BATTERY: -9.0 V" if the fault is BATTERY.
-        //                  Only the Analyst may measure. Copy the fuse example above.
+        if (command.startsWith("measure ")) {
+            if (who != Role.ANALYST) {
+                return "ERROR: only the Analyst can measure";
+            }
+            switch (command) {
+                case "measure fuse":
+                    return fault == Fault.FUSE && !solved
+                            ? "FUSE: OPEN (no continuity)"
+                            : "FUSE: OK (continuity)";
+                case "measure battery":
+                    return fault == Fault.BATTERY && !solved
+                            ? "BATTERY: -9.0 V"
+                            : "BATTERY: +9.0 V";
+                case "measure diode":
+                    return fault == Fault.DIODE && !solved
+                            ? "DIODE: no conduction"
+                            : "DIODE: 0.7 V forward";
+                default:
+                    return "ERROR: unknown measurement";
+            }
+        }
 
-        // TODO (Member 3): "measure diode"    -> "DIODE: 0.7 V forward", or "DIODE: no conduction" if the fault is DIODE.
+        if (command.equals("replace fuse")
+                || command.equals("flip battery")
+                || command.equals("flip diode")) {
+            if (who != Role.OPERATOR) {
+                return "ERROR: only the Operator can do that";
+            }
+            if (solved) {
+                return "POWER: already fixed";
+            }
 
-        // TODO (Member 3): "replace fuse", "flip battery", "flip diode"
-        //   not the Operator   -> "ERROR: only the Operator can do that"
-        //   the broken part    -> solved = true; return "FUSE fixed - POWER OK" (or BATTERY / DIODE)
-        //   a healthy part     -> "nothing changed - 30 s penalty"
-        //   Hint: decide which Fault the command is about, then compare it with `fault`.
+            boolean correctRepair =
+                    (fault == Fault.FUSE && command.equals("replace fuse"))
+                    || (fault == Fault.BATTERY && command.equals("flip battery"))
+                    || (fault == Fault.DIODE && command.equals("flip diode"));
 
-        return "UNKNOWN COMMAND: " + cmd;
+            if (correctRepair) {
+                solved = true;
+                return "POWER FIXED";
+            }
+
+            // The server's GameRoom must apply the 30-second timer penalty
+            // during integration. This offline stage only reports the event.
+            return "nothing changed - 30 s penalty";
+        }
+
+        return "ERROR: unknown command";
     }
 }
