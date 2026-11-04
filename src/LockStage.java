@@ -1,59 +1,115 @@
+import java.util.Locale;
+
 /**
- * MEMBER 3 — Stage 2: the lock opens when Y = (A XOR B) AND C is 1
- * and the Inspector and Operator both type "arm" within 1.5 seconds.
+ * Stage 2: (A XOR B) AND C controls the lamp.
+ * When the lamp is on, Inspector and Operator must both ARM within 1.5 s.
  */
 public class LockStage implements Stage {
-    private static final long WINDOW_NS = 1_500_000_000L; // 1.5 s in nanoseconds
 
-    private boolean a, b, c;                 // the three switches, start at 000
-    private long inspectorArmedAt = -1;      // System.nanoTime() of the last arm, -1 = never
-    private long operatorArmedAt = -1;
+    private static final long ARM_WINDOW_NANOS = 1_500_000_000L;
+
+    private String switches = "000";
+    private long inspectorArmAt;
+    private long operatorArmAt;
+    private boolean inspectorArmed;
+    private boolean operatorArmed;
     private boolean solved = false;
+    private int completionCount = 0;
 
-    public String name() { return "LOCK"; }
-
-    public synchronized boolean isSolved() { return solved; }
-
-    boolean lamp() {
-        // TODO (Member 3): return (A XOR B) AND C.  In Java: ^ is XOR, && is AND.
-        return false;
+    @Override
+    public String name() {
+        return "LOCK";
     }
 
-    // synchronized: two players can type "arm" at the same moment, from two server threads.
+    @Override
+    public synchronized boolean isSolved() {
+        return solved;
+    }
+
+    /** For the concurrency test: completion must be recorded only once. */
+    public synchronized int getCompletionCount() {
+        return completionCount;
+    }
+
+    private boolean lampOn() {
+        boolean a = switches.charAt(0) == '1';
+        boolean b = switches.charAt(1) == '1';
+        boolean c = switches.charAt(2) == '1';
+        return (a ^ b) && c;
+    }
+
+    @Override
     public synchronized String handle(Role who, String cmd) {
-        if (cmd.equals("manual")) {
-            if (who != Role.INSPECTOR) return "ERROR: only the Inspector has the manual";
-            return "GATE: Y = (A XOR B) AND C. The lamp shows Y. "
-                 + "The door unlocks when Y = 1 and both keys ARM within 1.5 s.";
+        if (who == null || cmd == null || cmd.trim().isEmpty()) {
+            return "ERROR: invalid role or command";
         }
 
-        // Example (done for you): "set 101" sets A=1, B=0, C=1.
-        if (cmd.startsWith("set ")) {
-            if (who != Role.OPERATOR) return "ERROR: only the Operator can do that";
-            String bits = cmd.substring(4).trim();
-            if (!bits.matches("[01]{3}")) return "ERROR: use three bits, e.g. set 101";
-            a = bits.charAt(0) == '1';
-            b = bits.charAt(1) == '1';
-            c = bits.charAt(2) == '1';
-            return "SWITCHES: A=" + bits.charAt(0) + " B=" + bits.charAt(1) + " C=" + bits.charAt(2);
+        String command = cmd.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+
+        if (command.equals("manual")) {
+            if (who != Role.INSPECTOR) {
+                return "ERROR: only the Inspector can read the manual";
+            }
+            return "MANUAL: Lamp = (A XOR B) AND C. "
+                    + "When the lamp is on, Inspector and Operator must ARM within 1.5 s.";
         }
 
-        if (cmd.equals("lamp")) {
-            if (who != Role.ANALYST) return "ERROR: only the Analyst can see the lamp";
-            return lamp() ? "LAMP: ON" : "LAMP: OFF";
+        if (command.equals("lamp")) {
+            if (who != Role.ANALYST) {
+                return "ERROR: only the Analyst can read the lamp";
+            }
+            return lampOn() ? "LAMP: ON" : "LAMP: OFF";
         }
 
-        if (cmd.equals("arm")) {
-            // TODO (Member 3):
-            // 1. Only INSPECTOR or OPERATOR may arm      -> else "ERROR: only the Inspector or Operator can arm"
-            // 2. If the lamp is off                      -> "ARM refused: lamp is off"
-            // 3. Save System.nanoTime() in inspectorArmedAt or operatorArmedAt
-            // 4. If both are set and Math.abs(inspectorArmedAt - operatorArmedAt) <= WINDOW_NS
-            //                                            -> solved = true; return "DOOR OPEN - ESCAPED"
-            // 5. Otherwise                               -> "ARMED - waiting for the other key (1.5 s)"
-            return "TODO: arm";
+        if (command.startsWith("set ")) {
+            if (who != Role.OPERATOR) {
+                return "ERROR: only the Operator can do that";
+            }
+            if (solved) {
+                return "LOCK: already solved";
+            }
+            String value = command.substring(4);
+            if (!value.matches("[01]{3}")) {
+                return "ERROR: use set followed by three binary digits, e.g. set 101";
+            }
+            switches = value;
+            // Old ARM presses must not count after switch settings change.
+            inspectorArmed = false;
+            operatorArmed = false;
+            return lampOn() ? "SWITCHES: " + value + " LAMP: ON"
+                    : "SWITCHES: " + value + " LAMP: OFF";
         }
 
-        return "UNKNOWN COMMAND: " + cmd;
+        if (command.equals("arm")) {
+            if (who != Role.INSPECTOR && who != Role.OPERATOR) {
+                return "ERROR: only Inspector and Operator can ARM";
+            }
+            if (solved) {
+                return "LOCK: already solved";
+            }
+            if (!lampOn()) {
+                return "ERROR: lamp is off; cannot ARM";
+            }
+
+            long now = System.nanoTime();
+            if (who == Role.INSPECTOR) {
+                inspectorArmAt = now;
+                inspectorArmed = true;
+            } else {
+                operatorArmAt = now;
+                operatorArmed = true;
+            }
+
+            // Both ARM presses must be present and recent enough.
+            if (inspectorArmed && operatorArmed
+                    && Math.abs(inspectorArmAt - operatorArmAt) <= ARM_WINDOW_NANOS) {
+                solved = true;
+                completionCount++;
+                return "LOCK OPEN - STAGE SOLVED";
+            }
+            return "ARM RECORDED - waiting for other player";
+        }
+
+        return "ERROR: unknown command";
     }
 }
