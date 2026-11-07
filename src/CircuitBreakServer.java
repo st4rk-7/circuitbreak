@@ -15,9 +15,19 @@ public class CircuitBreakServer {
     public static void main(String[] args) throws IOException {
         GameRoom room = new GameRoom();
 
-        // TODO (Member 1, week 2): start the timer thread here.
-        //   new Thread(() -> { while (true) { sleep 1000 ms; room.tick(); } }).start();
-        //   Thread.sleep throws InterruptedException, so wrap it in try/catch.
+        // Timer thread: once a second it asks the room to count down.
+        Thread timer = new Thread(() -> {
+            try {
+                while (true) {
+                    Thread.sleep(1000);
+                    room.tick();
+                }
+            } catch (InterruptedException e) {
+                // server is stopping
+            }
+        });
+        timer.setDaemon(true); // don't keep the JVM alive on its own
+        timer.start();
 
         try (ServerSocket server = new ServerSocket(PORT)) {
             System.out.println("CircuitBreak server listening on port " + PORT);

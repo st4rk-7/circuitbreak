@@ -15,8 +15,7 @@ public class GameRoom {
 
     /** Returns null if the player joined, otherwise the error text to send back. */
     public synchronized String join(Role role, PrintWriter out) {
-        // TODO (Member 1): if players already contains this role -> return "ERROR: " + role + " is taken"
-        //                  (there are only 3 roles, so this also refuses a 4th player)
+        if (players.containsKey(role)) return "ERROR: " + role + " is taken";
         players.put(role, out);
         broadcast(role.name().toLowerCase() + " joined (" + players.size() + "/3)");
         if (players.size() == 3) broadcast("ALL PLAYERS IN - STAGE 1: " + stages[0].name());
@@ -31,22 +30,37 @@ public class GameRoom {
     public synchronized void handle(Role role, String cmd) {
         if (over) { send(role, "GAME OVER"); return; }
         Stage stage = stages[current];
-        send(role, stage.handle(role, cmd));
+        String reply = stage.handle(role, cmd);
+        send(role, reply);
 
-        // TODO (Member 1): if the reply contains "penalty" -> secondsLeft -= 30 and tell everyone.
-        // TODO (Member 1): if stage.isSolved():
-        //     current++;
-        //     if current == stages.length -> broadcast("DOOR OPEN - ESCAPED"); over = true;
-        //     else                        -> broadcast("STAGE " + (current + 1) + ": " + stages[current].name());
+        // The stage only reports a wrong fix; the clock belongs to the room, so the penalty is applied here.
+        if (reply.contains("penalty")) {
+            secondsLeft -= 30;
+            broadcast("PENALTY: -30 s (" + secondsLeft + " s left)");
+        }
+
+        if (stage.isSolved()) {
+            current++;
+            if (current == stages.length) {
+                broadcast("DOOR OPEN - ESCAPED");
+                over = true;
+            } else {
+                broadcast("STAGE " + (current + 1) + ": " + stages[current].name());
+            }
+        }
     }
 
     /** Called once per second by the timer thread in CircuitBreakServer. */
     public synchronized void tick() {
         if (over || players.size() < 3) return; // clock runs only while all three are in
-        // TODO (Member 1, week 2):
-        //   secondsLeft--;
-        //   every 60 s, and every second in the last 10 -> broadcast("TIME LEFT: " + secondsLeft + " s")
-        //   at 0 -> broadcast("TIME UP - FAILED"); over = true;   (this must happen only once)
+        secondsLeft--;
+        // <= 0, not == 0: a 30 s penalty can jump the clock past zero. `over` makes FAILED fire once.
+        if (secondsLeft <= 0) {
+            broadcast("TIME UP - FAILED");
+            over = true;
+        } else if (secondsLeft % 60 == 0 || secondsLeft <= 10) {
+            broadcast("TIME LEFT: " + secondsLeft + " s");
+        }
     }
 
     private void send(Role role, String msg) {
@@ -54,8 +68,10 @@ public class GameRoom {
         if (out != null) out.println(msg);
     }
 
-    private void broadcast(String msg) {
-        System.out.println("[all] " + msg);
-        // TODO (Member 1): send msg to every player. Loop over players.values() and println to each.
+private void broadcast(String msg) {
+    System.out.println("[all] " + msg);
+    for (PrintWriter p : players.values()) {
+        p.println(msg);
     }
+}
 }
