@@ -6,7 +6,6 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * MEMBER 2 — the program each player runs.
@@ -15,6 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Main thread: keyboard -> server. Receiver thread: server -> screen.
  */
 public class CircuitBreakClient {
+    // Set to true when the player typed quit, so the receiver does not report an error.
+    private static volatile boolean clientIsClosing = false;
+
     public static void main(String[] args) {
         if (args.length != 2) {
             System.out.println("Usage: java -cp out CircuitBreakClient <server-host> <port>");
@@ -42,9 +44,7 @@ public class CircuitBreakClient {
             System.out.println("Connected to " + host + ":" + port);
             System.out.println("Type messages to send them. Type quit to disconnect.");
 
-            AtomicBoolean clientIsClosing = new AtomicBoolean(false);
-            Thread receiver = new Thread(() -> receiveMessages(in, clientIsClosing),
-                    "server-message-receiver");
+            Thread receiver = new Thread(new Receiver(in));
             receiver.start();
 
             // This main thread can wait for the keyboard without stopping the receiver thread.
@@ -56,7 +56,7 @@ public class CircuitBreakClient {
             }
 
             // Leaving this try block closes the socket and releases a receiver blocked in readLine().
-            clientIsClosing.set(true);
+            clientIsClosing = true;
             System.out.println("Disconnecting...");
         } catch (UnknownHostException e) {
             System.out.println("Unknown host: " + host);
@@ -68,23 +68,31 @@ public class CircuitBreakClient {
         }
     }
 
-    /** Runs only on the receiver thread and blocks until the server sends a full line. */
-    private static void receiveMessages(BufferedReader in, AtomicBoolean clientIsClosing) {
-        try {
-            String line;
-            while ((line = in.readLine()) != null) {
-                System.out.println("SERVER> " + line);
-            }
-            if (!clientIsClosing.get()) {
-                System.out.println("Server closed the connection.");
-                // The main thread may still be waiting for keyboard input, so end the process.
-                System.exit(0);
-            }
-        } catch (IOException e) {
-            if (!clientIsClosing.get()) {
-                System.out.println("Connection lost: " + e.getMessage());
-                // A blocked Scanner cannot be reliably interrupted by closing only the socket.
-                System.exit(1);
+    /** The receiver thread's job: block until the server sends a full line, then print it. */
+    static class Receiver implements Runnable {
+        private final BufferedReader in;
+
+        Receiver(BufferedReader in) {
+            this.in = in;
+        }
+
+        public void run() {
+            try {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    System.out.println("SERVER> " + line);
+                }
+                if (!clientIsClosing) {
+                    System.out.println("Server closed the connection.");
+                    // The main thread may still be waiting for keyboard input, so end the process.
+                    System.exit(0);
+                }
+            } catch (IOException e) {
+                if (!clientIsClosing) {
+                    System.out.println("Connection lost: " + e.getMessage());
+                    // A blocked Scanner cannot be reliably interrupted by closing only the socket.
+                    System.exit(1);
+                }
             }
         }
     }

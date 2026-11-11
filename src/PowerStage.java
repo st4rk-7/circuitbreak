@@ -1,4 +1,3 @@
-import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -44,7 +43,7 @@ public class PowerStage implements Stage {
             return "ERROR: invalid role or command";
         }
 
-        String command = cmd.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        String command = cmd.trim().toLowerCase();
 
         if (command.equals("manual")) {
             if (who != Role.INSPECTOR) {
@@ -58,22 +57,19 @@ public class PowerStage implements Stage {
             if (who != Role.ANALYST) {
                 return "ERROR: only the Analyst can measure";
             }
-            switch (command) {
-                case "measure fuse":
-                    return fault == Fault.FUSE && !solved
-                            ? "FUSE: OPEN (no continuity)"
-                            : "FUSE: OK (continuity)";
-                case "measure battery":
-                    return fault == Fault.BATTERY && !solved
-                            ? "BATTERY: -9.0 V"
-                            : "BATTERY: +9.0 V";
-                case "measure diode":
-                    return fault == Fault.DIODE && !solved
-                            ? "DIODE: no conduction"
-                            : "DIODE: 0.7 V forward";
-                default:
-                    return "ERROR: unknown measurement";
+            if (command.equals("measure fuse")) {
+                if (fault == Fault.FUSE && !solved) return "FUSE: OPEN (no continuity)";
+                return "FUSE: OK (continuity)";
             }
+            if (command.equals("measure battery")) {
+                if (fault == Fault.BATTERY && !solved) return "BATTERY: -9.0 V";
+                return "BATTERY: +9.0 V";
+            }
+            if (command.equals("measure diode")) {
+                if (fault == Fault.DIODE && !solved) return "DIODE: no conduction";
+                return "DIODE: 0.7 V forward";
+            }
+            return "ERROR: unknown measurement";
         }
 
         if (command.equals("replace fuse")

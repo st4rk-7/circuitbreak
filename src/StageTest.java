@@ -1,6 +1,3 @@
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Run all Member 3 Week 1 checks without starting a server.
  * Run: java -cp out StageTest
@@ -90,38 +87,46 @@ public class StageTest {
         for (int i = 0; i < 1000; i++) {
             LockStage stage = new LockStage();
             stage.handle(Role.OPERATOR, "set 101");
-            CountDownLatch ready = new CountDownLatch(2);
-            CountDownLatch go = new CountDownLatch(1);
-            AtomicInteger solvedMessages = new AtomicInteger();
-
-            Thread inspector = new Thread(() -> arm(stage, Role.INSPECTOR, ready, go, solvedMessages));
-            Thread operator = new Thread(() -> arm(stage, Role.OPERATOR, ready, go, solvedMessages));
+            ArmTask inspectorTask = new ArmTask(stage, Role.INSPECTOR);
+            ArmTask operatorTask = new ArmTask(stage, Role.OPERATOR);
+            Thread inspector = new Thread(inspectorTask);
+            Thread operator = new Thread(operatorTask);
+            go = false;
             inspector.start();
             operator.start();
-            ready.await();
-            go.countDown();
+            Thread.sleep(1); // let both threads reach the starting line
+            go = true;       // both press ARM at (almost) the same moment
             inspector.join();
             operator.join();
 
-            if (!stage.isSolved() || stage.getCompletionCount() != 1
-                    || solvedMessages.get() != 1) {
+            int solvedMessages = 0;
+            if (inspectorTask.reply.equals("LOCK OPEN - STAGE SOLVED")) solvedMessages++;
+            if (operatorTask.reply.equals("LOCK OPEN - STAGE SOLVED")) solvedMessages++;
+
+            if (!stage.isSolved() || stage.getCompletionCount() != 1 || solvedMessages != 1) {
                 throw new AssertionError("FAIL: concurrent ARM run " + (i + 1));
             }
         }
         check(true, "1000/1000 concurrent ARM runs solved exactly once");
     }
 
-    private static void arm(LockStage stage, Role role, CountDownLatch ready,
-                            CountDownLatch go, AtomicInteger solvedMessages) {
-        try {
-            ready.countDown();
-            go.await();
-            String reply = stage.handle(role, "arm");
-            if (reply.equals("LOCK OPEN - STAGE SOLVED")) {
-                solvedMessages.incrementAndGet();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    // Both threads wait for this flag, then press ARM together.
+    private static volatile boolean go = false;
+
+    /** One player's ARM press, run in its own thread. */
+    static class ArmTask implements Runnable {
+        private final LockStage stage;
+        private final Role role;
+        String reply = "";
+
+        ArmTask(LockStage stage, Role role) {
+            this.stage = stage;
+            this.role = role;
+        }
+
+        public void run() {
+            while (!go) { } // wait for the starting signal
+            reply = stage.handle(role, "arm");
         }
     }
 

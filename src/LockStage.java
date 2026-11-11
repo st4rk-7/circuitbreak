@@ -1,5 +1,3 @@
-import java.util.Locale;
-
 /**
  * Stage 2: (A XOR B) AND C controls the lamp.
  * When the lamp is on, Inspector and Operator must both ARM within 1.5 s.
@@ -31,6 +29,16 @@ public class LockStage implements Stage {
         return completionCount;
     }
 
+    /** True for exactly three characters, each 0 or 1. */
+    private boolean isThreeBits(String text) {
+        if (text.length() != 3) return false;
+        for (int i = 0; i < 3; i++) {
+            char c = text.charAt(i);
+            if (c != '0' && c != '1') return false;
+        }
+        return true;
+    }
+
     private boolean lampOn() {
         boolean a = switches.charAt(0) == '1';
         boolean b = switches.charAt(1) == '1';
@@ -44,7 +52,7 @@ public class LockStage implements Stage {
             return "ERROR: invalid role or command";
         }
 
-        String command = cmd.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        String command = cmd.trim().toLowerCase();
 
         if (command.equals("manual")) {
             if (who != Role.INSPECTOR) {
@@ -69,7 +77,7 @@ public class LockStage implements Stage {
                 return "LOCK: already solved";
             }
             String value = command.substring(4);
-            if (!value.matches("[01]{3}")) {
+            if (!isThreeBits(value)) {
                 return "ERROR: use set followed by three binary digits, e.g. set 101";
             }
             switches = value;

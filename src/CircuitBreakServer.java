@@ -16,16 +16,7 @@ public class CircuitBreakServer {
         GameRoom room = new GameRoom();
 
         // Timer thread: once a second it asks the room to count down.
-        Thread timer = new Thread(() -> {
-            try {
-                while (true) {
-                    Thread.sleep(1000);
-                    room.tick();
-                }
-            } catch (InterruptedException e) {
-                // server is stopping
-            }
-        });
+        Thread timer = new Thread(new TimerTask(room));
         timer.setDaemon(true); // don't keep the JVM alive on its own
         timer.start();
 
@@ -35,6 +26,26 @@ public class CircuitBreakServer {
                 Socket socket = server.accept(); // waits here until a laptop connects
                 System.out.println("[+] connection from " + socket.getRemoteSocketAddress());
                 new Thread(new ClientHandler(socket, room)).start(); // one thread per player
+            }
+        }
+    }
+
+    /** The timer thread's job: once a second, ask the room to count down. */
+    static class TimerTask implements Runnable {
+        private final GameRoom room;
+
+        TimerTask(GameRoom room) {
+            this.room = room;
+        }
+
+        public void run() {
+            try {
+                while (true) {
+                    Thread.sleep(1000);
+                    room.tick();
+                }
+            } catch (InterruptedException e) {
+                // server is stopping
             }
         }
     }

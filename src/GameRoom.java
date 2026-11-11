@@ -1,5 +1,5 @@
 import java.io.PrintWriter;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -7,8 +7,8 @@ import java.util.Map;
  * so every public method is synchronized: only one thread changes the door at a time.
  */
 public class GameRoom {
-    private final Map<Role, PrintWriter> players = new EnumMap<>(Role.class);
-    private final Stage[] stages = { new PowerStage(), new LockStage() };
+    private final Map<Role, PrintWriter> players = new HashMap<Role, PrintWriter>();
+    private final Stage[] stages = { new PowerStage(), new LockStage(), new CodeStage() };
     private int current = 0;
     private int secondsLeft = 600; // 10 minutes
     private boolean over = false;
@@ -68,10 +68,10 @@ public class GameRoom {
         if (out != null) out.println(msg);
     }
 
-private void broadcast(String msg) {
-    System.out.println("[all] " + msg);
-    for (PrintWriter p : players.values()) {
-        p.println(msg);
+    private void broadcast(String msg) {
+        System.out.println("[all] " + msg);
+        for (PrintWriter p : players.values()) {
+            p.println(msg);
+        }
     }
-}
 }
