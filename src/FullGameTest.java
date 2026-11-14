@@ -107,6 +107,8 @@ public class FullGameTest {
         op = new P();
         op.send("join operator");
         row(8, "  ...and the operator can rejoin", "WELCOME operator", op.until("WELCOME"));
+        row(8, "  ...and everyone is told the current stage", "ALL PLAYERS IN - STAGE 2: LOCK",
+                ana.until("ALL PLAYERS IN"));
 
         op.send("set 000");
         op.until("SWITCHES");

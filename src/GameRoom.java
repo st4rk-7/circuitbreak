@@ -18,7 +18,13 @@ public class GameRoom {
         if (players.containsKey(role)) return "ERROR: " + role + " is taken";
         players.put(role, out);
         broadcast(role.name().toLowerCase() + " joined (" + players.size() + "/3)");
-        if (players.size() == 3) broadcast("ALL PLAYERS IN - STAGE 1: " + stages[0].name());
+        if (players.size() == 3) {
+            if (over) {
+                broadcast("ALL PLAYERS IN - GAME OVER");
+            } else {
+                broadcast("ALL PLAYERS IN - STAGE " + (current + 1) + ": " + stages[current].name());
+            }
+        }
         return null;
     }
 
